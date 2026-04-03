@@ -91,7 +91,7 @@ export function SatisfactionForm() {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation
@@ -135,15 +135,55 @@ export function SatisfactionForm() {
       suggestions: formData.suggestions || "",
     };
 
-    // Sauvegarder dans localStorage
-    const existingSatisfactions = JSON.parse(
-      localStorage.getItem("satisfactions") || "[]"
-    );
-    existingSatisfactions.push(satisfaction);
-    localStorage.setItem("satisfactions", JSON.stringify(existingSatisfactions));
+    // Préparer les données pour le serveur
+    const dataToSend = {
+      nom: formData.nomClient,
+      email: formData.email,
+      telephone: formData.telephone,
+      dateService: formData.dateService || "",
+      categorie: formData.categorieService,
+      typeService: formData.typeService,
+      satisfaction: formData.satisfactionGlobale,
+      qualite: formData.qualiteService,
+      professionnalisme: formData.professionnalisme,
+      delais: formData.delais,
+      rapport: formData.rapportQualite,
+      commentaire: formData.commentaires || "",
+      suggestion: formData.suggestions || "",
+    };
 
-    toast.success("Merci pour votre retour ! Votre avis a été enregistré.");
-    setSubmitted(true);
+    try {
+      // Envoyer les données au serveur
+      const response = await fetch("http://localhost:3000/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataToSend),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur serveur: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log("Réponse du serveur:", result);
+
+      // Sauvegarder aussi dans localStorage comme backup
+      const existingSatisfactions = JSON.parse(
+        localStorage.getItem("satisfactions") || "[]"
+      );
+      existingSatisfactions.push(satisfaction);
+      localStorage.setItem("satisfactions", JSON.stringify(existingSatisfactions));
+
+      toast.success("Merci pour votre retour ! Votre avis a été enregistré.");
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Erreur lors de l'envoi du formulaire:", error);
+      toast.error(
+        "Erreur lors de l'enregistrement. Veuillez réessayer plus tard."
+      );
+    }
   };
 
   const handleNewForm = () => {

@@ -1,56 +1,97 @@
-require("dotenv").config();
-const express = require("express");
-const mysql = require("mysql2");
-const cors = require("cors");
+import express from 'express';
+import mysql from 'mysql2';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import dotenv from 'dotenv';
+
+// Charger les variables d'environnement
+dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+const port = process.env.PORT || 3000;
 
-// connexion DB
+// Middlewares
+app.use(cors()); // Autorise les requêtes provenant de React
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Configuration de la connexion MySQL
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'srm'
 });
 
-// API pour enregistrer formulaire
-app.post("/api/satisfaction", (req, res) => {
-  const data = req.body;
-
-  const sql = `
-    INSERT INTO satisfaction 
-    (nom, telephone, email, date_service, categorie, type_service,
-     satisfaction, qualite, professionnalisme, delais, rapport, commentaire, suggestion)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  const values = [
-    data.nom,
-    data.telephone,
-    data.email,
-    data.date_service,
-    data.categorie,
-    data.type_service,
-    data.satisfaction,
-    data.qualite,
-    data.professionnalisme,
-    data.delais,
-    data.rapport,
-    data.commentaire,
-    data.suggestion
-  ];
-
-  db.query(sql, values, (err, result) => {
+// Connexion à la base de données
+db.connect((err) => {
     if (err) {
-      console.log(err);
-      return res.status(500).send("Erreur serveur");
+        console.error('Erreur de connexion à MySQL :', err.message);
+        return;
     }
-    res.send("Données enregistrées !");
-  });
+    console.log('Connecté à la base de données MySQL (srm)');
 });
 
-app.listen(3001, () => {
-  console.log("Serveur lancé sur http://localhost:3001");
+// Route pour recevoir les données du formulaire
+app.post('/submit', (req, res) => {
+    // On extrait les données envoyées par le frontend (SatisfactionForm.tsx)
+    // Note : on utilise les noms exacts définis dans votre state React (CamelCase)
+    const { 
+        nom, 
+        telephone, 
+        email, 
+        dateService, 
+        categorie, 
+        typeService, 
+        satisfaction, 
+        qualite, 
+        professionnalisme, 
+        delais, 
+        rapport, 
+        commentaire, 
+        suggestion 
+    } = req.body;
+
+    // Requête SQL (mapping vers les colonnes de votre table phpMyAdmin)
+    const query = `INSERT INTO satisfaction 
+        (nom, telephone, email, date_service, categorie, type_service, satisfaction, qualite, professionnalisme, delais, rapport, commentaire, suggestion) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    const values = [
+        nom, 
+        telephone, 
+        email, 
+        dateService, 
+        categorie, 
+        typeService, 
+        satisfaction, 
+        qualite, 
+        professionnalisme, 
+        delais, 
+        rapport, 
+        commentaire, 
+        suggestion
+    ];
+
+    // Exécution de la requête
+    db.query(query, values, (err, result) => {
+        if (err) {
+            console.error('Erreur lors de l\'insertion SQL :', err);
+            return res.status(500).json({ 
+                error: 'Erreur lors de l\'enregistrement en base de données',
+                details: err.message 
+            });
+        }
+        
+        console.log('Données insérées avec succès ! ID:', result.insertId);
+        res.status(200).json({ 
+            message: 'Évaluation enregistrée avec succès', 
+            id: result.insertId 
+        });
+    });
+});
+
+// Lancement du serveur
+app.listen(port, () => {
+    console.log(`Serveur démarré sur http://localhost:${port}`);
 });
