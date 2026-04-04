@@ -15,22 +15,18 @@ app.use(cors()); // Autorise les requêtes provenant de React
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Configuration de la connexion MySQL
-const db = mysql.createConnection({
+const db = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'srm'
+    database: process.env.DB_NAME || 'srm',
+    port: process.env.DB_PORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-// Connexion à la base de données
-db.connect((err) => {
-    if (err) {
-        console.error('Erreur de connexion à MySQL :', err.message);
-        return;
-    }
-    console.log('Connecté à la base de données MySQL (srm)');
-});
+console.log('Pool MySQL créé');
 
 // Route pour recevoir les données du formulaire
 app.post('/submit', (req, res) => {
