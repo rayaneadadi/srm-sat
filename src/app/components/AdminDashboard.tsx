@@ -41,7 +41,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-const AUTO_REFRESH_INTERVAL = 30000; // 30 secondes
+const AUTO_REFRESH_INTERVAL = 30000;
 
 function StarDisplay({ value }: { value: number }) {
   return (
@@ -58,7 +58,7 @@ function StarDisplay({ value }: { value: number }) {
 
 function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string | number; color: string }) {
   return (
-    <div className={`bg-white rounded-2xl p-5 shadow-sm border border-gray-100`}>
+    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
       <div className={`inline-flex p-2.5 rounded-xl mb-3 ${color}`}>
         {icon}
       </div>
@@ -83,8 +83,9 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
     Authorization: `Bearer ${token}`,
   };
 
-  const fetchData = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
+  // fetchData sans aucun toast — le toast est géré à l'extérieur
+  const fetchData = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true);
     try {
       const [resData, statsData] = await Promise.all([
         fetch(`${import.meta.env.VITE_API_URL}/admin/responses`, { headers: authHeaders }),
@@ -102,26 +103,35 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
       setResponses(r);
       setStats(s);
       setLastRefresh(new Date());
-      
     } catch {
-      if (!silent) toast.error("Impossible de charger les données");
+      if (showLoading) toast.error("Impossible de charger les données");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, [token]);
 
-  // Chargement initial
+  // Chargement initial avec loading spinner
   useEffect(() => {
-    fetchData();
+    const init = async () => {
+      setLoading(true);
+      await fetchData(false);
+      setLoading(false);
+    };
+    init();
   }, [fetchData]);
 
-  // Auto-refresh toutes les 30 secondes
+  // Auto-refresh silencieux toutes les 30 secondes — sans toast
   useEffect(() => {
-    const interval = setInterval(() => fetchData(true), AUTO_REFRESH_INTERVAL);
+    const interval = setInterval(() => fetchData(false), AUTO_REFRESH_INTERVAL);
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // Filtrage et tri
+  // Bouton refresh manuel — avec toast
+  const handleManualRefresh = async () => {
+    await fetchData(false);
+    toast.success("Données actualisées");
+  };
+
   const filtered = responses
     .filter((r) => {
       const q = search.toLowerCase();
@@ -168,13 +178,12 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {/* Dernière synchro */}
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
               Synchro : {lastRefresh.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </div>
             <button
-              onClick={() => fetchData(true)}
+              onClick={handleManualRefresh}
               className="p-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
               title="Actualiser"
             >
@@ -195,42 +204,12 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
         {/* Stats cards */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <StatCard
-              icon={<Users className="w-5 h-5 text-blue-600" />}
-              label="Total réponses"
-              value={stats.total}
-              color="bg-blue-50"
-            />
-            <StatCard
-              icon={<Award className="w-5 h-5 text-yellow-600" />}
-              label="Note globale"
-              value={`${stats.avg_global}/5`}
-              color="bg-yellow-50"
-            />
-            <StatCard
-              icon={<Star className="w-5 h-5 text-orange-500" />}
-              label="Satisfaction"
-              value={`${stats.avg_satisfaction}/5`}
-              color="bg-orange-50"
-            />
-            <StatCard
-              icon={<TrendingUp className="w-5 h-5 text-green-600" />}
-              label="Qualité"
-              value={`${stats.avg_qualite}/5`}
-              color="bg-green-50"
-            />
-            <StatCard
-              icon={<BarChart2 className="w-5 h-5 text-purple-600" />}
-              label="Professionnalisme"
-              value={`${stats.avg_professionnalisme}/5`}
-              color="bg-purple-50"
-            />
-            <StatCard
-              icon={<Clock className="w-5 h-5 text-cyan-600" />}
-              label="Délais"
-              value={`${stats.avg_delais}/5`}
-              color="bg-cyan-50"
-            />
+            <StatCard icon={<Users className="w-5 h-5 text-blue-600" />} label="Total réponses" value={stats.total} color="bg-blue-50" />
+            <StatCard icon={<Award className="w-5 h-5 text-yellow-600" />} label="Note globale" value={`${stats.avg_global}/5`} color="bg-yellow-50" />
+            <StatCard icon={<Star className="w-5 h-5 text-orange-500" />} label="Satisfaction" value={`${stats.avg_satisfaction}/5`} color="bg-orange-50" />
+            <StatCard icon={<TrendingUp className="w-5 h-5 text-green-600" />} label="Qualité" value={`${stats.avg_qualite}/5`} color="bg-green-50" />
+            <StatCard icon={<BarChart2 className="w-5 h-5 text-purple-600" />} label="Professionnalisme" value={`${stats.avg_professionnalisme}/5`} color="bg-purple-50" />
+            <StatCard icon={<Clock className="w-5 h-5 text-cyan-600" />} label="Délais" value={`${stats.avg_delais}/5`} color="bg-cyan-50" />
           </div>
         )}
 
@@ -285,54 +264,38 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
           ) : (
             filtered.map((r) => (
               <div key={r.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all">
-                {/* Ligne principale */}
                 <div
                   className="px-5 py-4 flex flex-wrap items-center gap-4 cursor-pointer hover:bg-gray-50 transition"
                   onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
                 >
-                  {/* Infos client */}
                   <div className="flex-1 min-w-40">
                     <p className="font-semibold text-gray-800 text-sm">{r.nom}</p>
                     <p className="text-xs text-gray-400">{r.email}</p>
                   </div>
-
-                  {/* Tags */}
                   <div className="flex gap-2 flex-wrap">
                     {r.categorie && (
-                      <span className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium">
-                        {r.categorie}
-                      </span>
+                      <span className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium">{r.categorie}</span>
                     )}
                     {r.type_service && (
-                      <span className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium">
-                        {r.type_service}
-                      </span>
+                      <span className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium">{r.type_service}</span>
                     )}
                   </div>
-
-                  {/* Note satisfaction */}
                   <div className="flex items-center gap-2">
                     <StarDisplay value={r.satisfaction} />
                     <span className="text-sm font-bold text-gray-700">{r.satisfaction}/5</span>
                   </div>
-
-                  {/* Date */}
                   <p className="text-xs text-gray-400 hidden md:block">
                     {new Date(r.created_at).toLocaleDateString("fr-FR")}
                   </p>
-
-                  {/* Toggle */}
                   {expandedId === r.id
                     ? <ChevronUp className="w-4 h-4 text-gray-400 ml-auto" />
                     : <ChevronDown className="w-4 h-4 text-gray-400 ml-auto" />
                   }
                 </div>
 
-                {/* Détails expandables */}
                 {expandedId === r.id && (
                   <div className="px-5 pb-5 border-t border-gray-100 pt-4 bg-gray-50">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Infos détaillées */}
                       <div className="space-y-3">
                         <h4 className="text-sm font-semibold text-gray-700 mb-2">Informations client</h4>
                         <div className="grid grid-cols-2 gap-2 text-sm">
@@ -350,8 +313,6 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
                           </div>
                         </div>
                       </div>
-
-                      {/* Notes détaillées */}
                       <div className="space-y-2">
                         <h4 className="text-sm font-semibold text-gray-700 mb-2">Évaluations</h4>
                         {[
@@ -371,8 +332,6 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
                         ))}
                       </div>
                     </div>
-
-                    {/* Commentaires */}
                     {(r.commentaire || r.suggestion) && (
                       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         {r.commentaire && (
@@ -401,7 +360,6 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
         </div>
       </main>
 
-      {/* Footer auto-refresh info */}
       <div className="text-center py-4 text-xs text-gray-400">
         Actualisation automatique toutes les 30 secondes
       </div>
