@@ -60,7 +60,7 @@ export default function App() {
       {appState === "admin" && (
         <AdminDashboard nom={nom} token={token} onLogout={handleLogout} />
       )}
-      <Toaster />
+      <Toaster position="top-center" />
     </div>
   );
 }
