@@ -102,7 +102,7 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
       setResponses(r);
       setStats(s);
       setLastRefresh(new Date());
-      if (silent) toast.success("Données actualisées");
+      
     } catch {
       if (!silent) toast.error("Impossible de charger les données");
     } finally {
