@@ -21,7 +21,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     }
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -45,8 +45,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div style={{position: 'fixed', inset: 0, overflow: 'auto'}} className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 flex items-center justify-center p-4 overflow-hidden">
-      
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 flex items-center justify-center p-4">
+      {/* Cercles décoratifs */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full opacity-10 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-300 rounded-full opacity-10 translate-x-1/2 translate-y-1/2 pointer-events-none" />
 
       <div className="w-full max-w-md relative">
         {/* Card principale */}

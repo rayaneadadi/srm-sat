@@ -154,7 +154,7 @@ export function SatisfactionForm() {
 
     try {
       // Envoyer les données au serveur
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/submit`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

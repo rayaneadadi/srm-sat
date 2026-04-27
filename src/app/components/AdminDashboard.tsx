@@ -88,8 +88,8 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
     if (showLoading) setLoading(true);
     try {
       const [resData, statsData] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_URL}/admin/responses`, { headers: authHeaders }),
-        fetch(`${import.meta.env.VITE_API_URL}/admin/stats`, { headers: authHeaders }),
+        fetch(`${import.meta.env.VITE_API_URL}/api/admin/responses`, { headers: authHeaders }),
+        fetch(`${import.meta.env.VITE_API_URL}/api/admin/stats`, { headers: authHeaders }),
       ]);
       if (!resData.ok || !statsData.ok) {
         if (resData.status === 401 || resData.status === 403) {
