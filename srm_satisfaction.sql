@@ -35,6 +35,7 @@ CREATE TABLE `satisfaction` (
   `date_service` date DEFAULT NULL,
   `categorie` varchar(100) DEFAULT NULL,
   `type_service` varchar(100) DEFAULT NULL,
+  `direction` varchar(50) DEFAULT NULL,
   `satisfaction` int(11) DEFAULT NULL,
   `qualite` int(11) DEFAULT NULL,
   `professionnalisme` int(11) DEFAULT NULL,
