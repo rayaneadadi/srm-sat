@@ -16,15 +16,15 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
-  const { nom, telephone, email, dateService, categorie, typeService,
+  const { nom, telephone, email, dateService, categorie, typeService, direction,
     satisfaction, qualite, professionnalisme, delais, rapport, commentaire, suggestion } = req.body;
 
   let db;
   try {
     db = await mysql.createConnection(dbConfig);
     await db.execute(
-      `INSERT INTO satisfaction (nom, telephone, email, date_service, categorie, type_service, satisfaction, qualite, professionnalisme, delais, rapport, commentaire, suggestion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [nom, telephone, email, dateService, categorie, typeService, satisfaction, qualite, professionnalisme, delais, rapport, commentaire, suggestion]
+      `INSERT INTO satisfaction (nom, telephone, email, date_service, categorie, type_service, direction, satisfaction, qualite, professionnalisme, delais, rapport, commentaire, suggestion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [nom, telephone, email, dateService, categorie, typeService, direction, satisfaction, qualite, professionnalisme, delais, rapport, commentaire, suggestion]
     );
     return res.status(200).json({ message: 'Évaluation enregistrée avec succès' });
   } catch (err) {

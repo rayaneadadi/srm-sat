@@ -15,6 +15,7 @@ interface Response {
   date_service: string;
   categorie: string;
   type_service: string;
+  direction: string;
   satisfaction: number;
   qualite: number;
   professionnalisme: number;
@@ -76,6 +77,7 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [filterCategorie, setFilterCategorie] = useState("all");
+  const [filterDirection, setFilterDirection] = useState("all");
   const [sortBy, setSortBy] = useState<"date" | "satisfaction">("date");
 
   const authHeaders = {
@@ -138,9 +140,11 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
       const matchSearch =
         r.nom?.toLowerCase().includes(q) ||
         r.email?.toLowerCase().includes(q) ||
-        r.type_service?.toLowerCase().includes(q);
+        r.type_service?.toLowerCase().includes(q) ||
+        r.direction?.toLowerCase().includes(q);
       const matchCat = filterCategorie === "all" || r.categorie === filterCategorie;
-      return matchSearch && matchCat;
+      const matchDir = filterDirection === "all" || r.direction === filterDirection;
+      return matchSearch && matchCat && matchDir;
     })
     .sort((a, b) => {
       if (sortBy === "date") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -148,6 +152,7 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
     });
 
   const categories = [...new Set(responses.map((r) => r.categorie).filter(Boolean))];
+  const directions = [...new Set(responses.map((r) => r.direction).filter(Boolean))].sort();
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("fr-FR", {
@@ -222,9 +227,20 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher par nom, email, service..."
+                placeholder="Rechercher par nom, email, direction, service..."
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
               />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <select
+                value={filterDirection}
+                onChange={(e) => setFilterDirection(e.target.value)}
+                className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">Toutes les directions</option>
+                {directions.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
             </div>
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-400" />
@@ -273,6 +289,9 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
                     <p className="text-xs text-gray-400">{r.email}</p>
                   </div>
                   <div className="flex gap-2 flex-wrap">
+                    {r.direction && (
+                      <span className="px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-lg text-xs font-semibold">{r.direction}</span>
+                    )}
                     {r.categorie && (
                       <span className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium">{r.categorie}</span>
                     )}
@@ -299,6 +318,10 @@ export function AdminDashboard({ nom, token, onLogout }: AdminDashboardProps) {
                       <div className="space-y-3">
                         <h4 className="text-sm font-semibold text-gray-700 mb-2">Informations client</h4>
                         <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <p className="text-gray-400 text-xs">Direction</p>
+                            <p className="font-medium text-gray-700">{r.direction || "—"}</p>
+                          </div>
                           <div>
                             <p className="text-gray-400 text-xs">Téléphone</p>
                             <p className="font-medium text-gray-700">{r.telephone || "—"}</p>

@@ -24,6 +24,7 @@ interface SatisfactionData {
   professionnalisme: number;
   delais: number;
   rapportQualite: number;
+  direction: string;
   commentaires: string;
   suggestions: string;
 }
@@ -34,6 +35,7 @@ export function SatisfactionForm() {
     {
       categorieService: "",
       typeService: "",
+      direction: "",
       satisfactionGlobale: 0,
       qualiteService: 0,
       professionnalisme: 0,
@@ -47,6 +49,18 @@ export function SatisfactionForm() {
   }>({});
 
   const categoriesOptions = ["Incident", "Demande"];
+
+  const directionsOptions = {
+    centrales: [
+      "DAF", "DAI", "DAJ", "DAL", "DC", "DCEM", "DCH", "DDSP",
+      "DEAL", "DEE", "DEEP", "DEXP", "DFS", "DG", "DGGCRI", "DINV", "DNQSPT",
+    ],
+    provinciales: [
+      "DP Benslimane", "DP Berrechid", "DP El Jadida", "DP Mediouna",
+      "DP Nouaceur", "DP Settat", "DP Sidi Bennour",
+      "DP13", "DP2", "DP4", "DP56", "DP7", "DPP", "DSITD", "SPC",
+    ],
+  };
 
   const servicesOptions = [
     "Application",
@@ -100,8 +114,8 @@ export function SatisfactionForm() {
       return;
     }
 
-    if (!formData.categorieService || !formData.typeService) {
-      toast.error("Veuillez sélectionner la catégorie et le type de service");
+    if (!formData.categorieService || !formData.typeService || !formData.direction) {
+      toast.error("Veuillez sélectionner la direction, la catégorie et le type de service");
       return;
     }
 
@@ -125,6 +139,7 @@ export function SatisfactionForm() {
       telephone: formData.telephone!,
       categorieService: formData.categorieService!,
       typeService: formData.typeService!,
+      direction: formData.direction!,
       dateService: formData.dateService || "",
       satisfactionGlobale: formData.satisfactionGlobale!,
       qualiteService: formData.qualiteService!,
@@ -143,6 +158,7 @@ export function SatisfactionForm() {
       dateService: formData.dateService || "",
       categorie: formData.categorieService,
       typeService: formData.typeService,
+      direction: formData.direction,
       satisfaction: formData.satisfactionGlobale,
       qualite: formData.qualiteService,
       professionnalisme: formData.professionnalisme,
@@ -191,6 +207,7 @@ export function SatisfactionForm() {
     setFormData({
       categorieService: "",
       typeService: "",
+      direction: "",
       satisfactionGlobale: 0,
       qualiteService: 0,
       professionnalisme: 0,
@@ -330,6 +347,34 @@ export function SatisfactionForm() {
                       }
                     />
                   </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="direction">Direction *</Label>
+                  <Select
+                    value={formData.direction}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, direction: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez votre direction" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_centrales" disabled className="font-semibold text-gray-400 text-xs uppercase">
+                        — Directions centrales —
+                      </SelectItem>
+                      {directionsOptions.centrales.map((d) => (
+                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      ))}
+                      <SelectItem value="_provinciales" disabled className="font-semibold text-gray-400 text-xs uppercase mt-1">
+                        — Directions provinciales —
+                      </SelectItem>
+                      {directionsOptions.provinciales.map((d) => (
+                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
